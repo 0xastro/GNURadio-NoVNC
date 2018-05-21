@@ -62,6 +62,46 @@ git clone https://github.com/astro7x/GNURadio-NoVNC
 
 ### TODO
 create a script to create random users to use the GNURadio-NoVNC service for a fixed timeslot and terminate/abort the connection after time slot duration.
+
+## Running the server for multiple users
+* Create 2 users and then set their password accordingly
+``` bash
+adduser vncuser1 vncuser2 
+```
+* Edit the /etc/sysconfig/vncservers file, by adding the following to the end of file
+``` bash
+VNCSERVERS="1:vncuser1 2:vncuser2"
+VNCSERVERARGS[1]="-geometry 1024x600
+VNCSERVERARGS[2]="-geometry 1024x600
+```
+
+* The iptables rules need to be modified to open the desired VNC ports, e.g.
+```
+sudo iptables -I INPUT 5 -m state --state NEW -m tcp -p tcp -m multiport --dports 5901:5903,6001:6003 -j ACCEPT
+sudo service iptables save
+sudo service iptables restart
+```
+
+* Make sure that .vnc/xstartup exists for both users (vncuser1 and vncuser2) and edit the end of script to contain:
+```
+#twm & 
+exec gnome-session &
+```
+* Restart The vncserver
+```
+sudo service vncserver restart
+```
+* To start the session for vncuser1:
+```
+vncserver :1
+./utils/launch.sh --vnc localhost:5901 --listen 6080
+```
+* To start the session for vncuser2:
+```
+vncserver :2
+./utils/launch.sh --vnc localhost:5901 --listen 6081
+```
+
 [REF](https://www.howtoforge.com/vnc-server-installation-on-centos-7)
 
 
